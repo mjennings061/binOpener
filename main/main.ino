@@ -9,41 +9,59 @@
         GND: GND
  */
 
-#include <Stepper.h>
+#include <CheapStepper.h>
 
 // Turn on debug statements to the serial output
-#define DEBUG 1// enables debug serial prints
+#define DEBUG 0// enables debug serial prints
 #ifdef DEBUG
 #define DEBUG_PRINT(x)      Serial.print (x)
 #define DEBUG_PRINTLN(x)  Serial.println (x)
 #else
-#define DEBUG_PRINT(x)
-#define DEBUG_PRINTLN(x)
+#define DEBUG_PRINT(x) 
+#define DEBUG_PRINTLN(x) 
 #endif
 
 #define TRIG_PIN 6    // Trigger
 #define ECHO_PIN 7    // Echo
+#define STEPS 2038 // the number of steps in one revolution of your motor (28BYJ-48)
 
-const int stepsPerRevolution = 200;  //change this to fit the number of steps per revolution
-Stepper myStepper(stepsPerRevolution, 8, 9, 10, 11); //initialize the stepper library on pins 8 through 11
-int stepCount = 0;         //number of steps the motor has taken
+CheapStepper stepper (8,9,10,11);
+bool cw = 1;  //invert this if the motor direction is opposite  
+bool openFlag = 0;  //lid starts closed
+bool closedFlag = 1;  //lid starts closed
 
 void setup() {
   Serial.begin (9600);
   // I/O declaration
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
+  stepper.setRpm(12); 
 }
  
 void loop() {
   long dist = distInCm(); //calculate distance in centimeters
-  Serial.print(dist);
-  Serial.print(" cm\t");
-  myStepper.step(1);
-  Serial.print("steps: ");
-  Serial.println(stepCount);
-  stepCount++;
-  delay(250);
+  DEBUG_PRINT(dist);
+  DEBUG_PRINTLN(" cm");
+  if(dist <= 10){
+    switch (openFlag) {
+      case 0:
+        DEBUG_PRINT("Opening...");
+        stepper.moveDegrees (cw, 90);
+        openFlag = 1;
+        DEBUG_PRINTLN("Opened...");
+        break;
+      case 1:
+        DEBUG_PRINT("Closing...");
+        stepper.moveDegrees (!cw, 90);
+        openFlag = 0;
+        DEBUG_PRINTLN("... Closed");
+        break;
+      default:
+        DEBUG_PRINTLN("Error");
+        break;
+    }
+  }
+  delay(100);
 }
 
 long distInCm(void){
