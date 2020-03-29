@@ -1,7 +1,6 @@
 /*
- * created by Rui Santos, https://randomnerdtutorials.com
- * 
- * Complete Guide for Ultrasonic Sensor HC-SR04
+ * Inspired by Rui Santos, https://randomnerdtutorials.com
+ * Ultrasonic Sensor HC-SR04
  *
     Ultrasonic sensor Pins:
         VCC: +5VDC
@@ -9,6 +8,8 @@
         Echo: Echo (OUTPUT) - Pin 12
         GND: GND
  */
+
+#include <Stepper.h>
 
 // Turn on debug statements to the serial output
 #define DEBUG 1// enables debug serial prints
@@ -20,13 +21,16 @@
 #define DEBUG_PRINTLN(x)
 #endif
 
-#define TRIG_PIN 11    // Trigger
-#define ECHO_PIN 12    // Echo
- 
+#define TRIG_PIN 6    // Trigger
+#define ECHO_PIN 7    // Echo
+
+const int stepsPerRevolution = 200;  //change this to fit the number of steps per revolution
+Stepper myStepper(stepsPerRevolution, 8, 9, 10, 11); //initialize the stepper library on pins 8 through 11
+int stepCount = 0;         //number of steps the motor has taken
+
 void setup() {
-  //Serial Port begin
   Serial.begin (9600);
-  //Define inputs and outputs
+  // I/O declaration
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
 }
@@ -34,7 +38,11 @@ void setup() {
 void loop() {
   long dist = distInCm(); //calculate distance in centimeters
   Serial.print(dist);
-  Serial.print("cm\n");
+  Serial.print(" cm\t");
+  myStepper.step(1);
+  Serial.print("steps: ");
+  Serial.println(stepCount);
+  stepCount++;
   delay(250);
 }
 
